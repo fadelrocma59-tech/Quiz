@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocab Quiz — Chapitre 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --card: #13131a;
+    --border: #2a2a3a;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --green: #00e5a0;
+    --text: #f0f0ff;
+    --muted: #6b6b8a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle { color: var(--muted); font-size: 0.8rem; margin-bottom: 2rem; text-align: center; }
+  .mode-selector {
+    display: flex; gap: 0.5rem; margin-bottom: 2rem;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 0.4rem;
+  }
+  .mode-btn {
+    padding: 0.5rem 1.2rem; border-radius: 8px; border: none;
+    cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    background: transparent; color: var(--muted); transition: all 0.2s;
+  }
+  .mode-btn.active { background: var(--accent); color: white; }
+  .progress-bar {
+    width: 100%; max-width: 500px; height: 4px;
+    background: var(--border); border-radius: 2px; margin-bottom: 1.5rem; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px; transition: width 0.4s ease;
+  }
+  .score-display { font-size: 0.75rem; color: var(--muted); margin-bottom: 1rem; text-align: center; }
+  .score-display span { color: var(--green); font-weight: 500; }
+  .counter { font-size: 0.75rem; color: var(--muted); text-align: center; margin-bottom: 0.5rem; }
+  .card-container { width: 100%; max-width: 500px; margin-bottom: 1.5rem; }
+  .card {
+    width: 100%; min-height: 180px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 2rem;
+    cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+    animation: pop 0.3s ease;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108,99,255,0.15); }
+  .card-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+  .card-word { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; text-align: center; line-height: 1.3; }
+  .card-hint { font-size: 0.7rem; color: var(--muted); margin-top: 1rem; text-align: center; }
+  .answer-section { width: 100%; max-width: 500px; }
+  .reveal-btn {
+    width: 100%; padding: 1rem; background: var(--accent); border: none;
+    border-radius: 12px; color: white; font-family: 'DM Mono', monospace;
+    font-size: 0.85rem; cursor: pointer; margin-bottom: 1rem; transition: all 0.2s;
+  }
+  .reveal-btn:hover { background: #7c74ff; }
+  .answer-reveal {
+    background: var(--card); border: 1px solid var(--green);
+    border-radius: 12px; padding: 1.2rem; text-align: center;
+    margin-bottom: 1rem; display: none;
+  }
+  .answer-reveal.visible { display: block; }
+  .answer-text { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--green); line-height: 1.4; }
+  .feedback-btns { display: none; gap: 0.75rem; }
+  .feedback-btns.visible { display: flex; }
+  .btn-knew {
+    flex: 1; padding: 0.85rem;
+    background: rgba(0,229,160,0.1); border: 1px solid var(--green);
+    border-radius: 12px; color: var(--green); font-family: 'DM Mono', monospace;
+    font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-knew:hover { background: rgba(0,229,160,0.2); }
+  .btn-didnt {
+    flex: 1; padding: 0.85rem;
+    background: rgba(255,101,132,0.1); border: 1px solid var(--accent2);
+    border-radius: 12px; color: var(--accent2); font-family: 'DM Mono', monospace;
+    font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-didnt:hover { background: rgba(255,101,132,0.2); }
+  .qcm-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .qcm-btn {
+    padding: 0.9rem; background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text); font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; cursor: pointer; transition: all 0.2s; text-align: center; line-height: 1.4;
+  }
+  .qcm-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .qcm-btn.correct { background: rgba(0,229,160,0.1); border-color: var(--green); color: var(--green); }
+  .qcm-btn.wrong { background: rgba(255,101,132,0.1); border-color: var(--accent2); color: var(--accent2); }
+  .next-btn {
+    width: 100%; padding: 1rem; background: transparent;
+    border: 1px solid var(--border); border-radius: 12px; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 0.85rem; cursor: pointer;
+    margin-top: 1rem; transition: all 0.2s; display: none;
+  }
+  .next-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .next-btn.visible { display: block; }
+  .results { width: 100%; max-width: 500px; text-align: center; display: none; }
+  .results.visible { display: block; }
+  .results-score {
+    font-family: 'Syne', sans-serif; font-size: 4rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--green));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 1rem 0;
+  }
+  .results-msg { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; line-height: 1.6; }
+  .restart-btn {
+    padding: 1rem 2rem; background: var(--accent); border: none;
+    border-radius: 12px; color: white; font-family: 'DM Mono', monospace;
+    font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+  }
+  .restart-btn:hover { background: #7c74ff; }
+  @keyframes pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<h1>VOCAB QUIZ</h1>
+<p class="subtitle">Chapitre 2 — Media & The Techies' World</p>
+
+<div class="mode-selector">
+  <button class="mode-btn active" onclick="setMode('flashcard')">Flashcard</button>
+  <button class="mode-btn" onclick="setMode('qcm')">QCM</button>
+  <button class="mode-btn" onclick="setMode('fr-to-en')">FR → EN</button>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="score-display" id="scoreDisplay"></div>
+<div class="counter" id="counter"></div>
+
+<div class="card-container" id="cardContainer">
+  <div class="card" id="mainCard">
+    <div class="card-label" id="cardLabel">ANGLAIS</div>
+    <div class="card-word" id="cardWord"></div>
+    <div class="card-hint" id="cardHint"></div>
+  </div>
+</div>
+
+<div class="answer-section" id="answerSection"></div>
+
+<div class="results" id="results">
+  <div class="card-label">RÉSULTAT FINAL</div>
+  <div class="results-score" id="resultsScore"></div>
+  <div class="results-msg" id="resultsMsg"></div>
+  <button class="restart-btn" onclick="restart()">🔄 Recommencer</button>
+</div>
+
+<script>
+const vocab = [
+  ["THE PRESS", "la presse écrite"],
+  ["THE FOURTH ESTATE", "le quatrième pouvoir/ la presse"],
+  ["MAINSTREAM MEDIA", "les médias traditionnels"],
+  ["A PRESS BARON/LORD/TYCOON/MAGNATE", "un magnat de la presse"],
+  ["THE GUTTER PRESS", "la presse à scandales"],
+  ["THE CIRCULATION", "le tirage"],
+  ["ONLINE NEWSPAPERS", "les journaux en ligne"],
+  ["TO CHARGE FOR CONTENT / TO SET UP A PAYWALL", "faire payer pour accéder au contenu"],
+  ["A SURVEY", "enquête"],
+  ["A POLL", "un sondage"],
+  ["A REPORT", "un compte-rendu"],
+  ["CLASSIFIED ADS", "petites annonces"],
+  ["THE FREEDOM OF THE PRESS", "la liberté de la presse"],
+  ["TO RAISE PUBLIC AWARENESS / TO SENSITIZE PUBLIC OPINION", "sensibiliser l'opinion"],
+  ["TO INFORM", "informer"],
+  ["TO EXPOSE", "dénoncer"],
+  ["TO COVER AN EVENT", "couvrir un évènement"],
+  ["MEDIA COVERAGE", "la couverture par les médias"],
+  ["THE HEADLINES", "les (gros) titres"],
+  ["TO HIT THE HEADLINES", "faire la une des journaux"],
+  ["AN EDITOR", "un rédacteur en chef"],
+  ["TO CENSOR", "censurer"],
+  ["TO BE SUBJECT TO CENSORSHIP", "être soumis à la censure"],
+  ["TO SLANDER", "calomnier"],
+  ["TO LIBEL", "diffamer"],
+  ["LIBEL", "la diffamation"],
+  ["TO SUE FOR LIBEL", "poursuivre en justice pour diffamation"],
+  ["INVESTIGATIVE JOURNALISM", "le journalisme d'investigation"],
+  ["TO INVESTIGATE (A CASE)", "enquêter sur une affaire"],
+  ["BIASED / PREJUDICED", "partisan, tendancieux"],
+  ["RELIABLE", "fiable"],
+  ["UNRELIABLE", "sujet à caution"],
+  ["A PUBLIC WATCHDOG", "une agence de contrôle"],
+  ["GOSSIP", "les potins"],
+  ["MEDIA HYPE", "le battage médiatique"],
+  ["RIGHT TO PRIVACY", "le droit au respect de la vie privée"],
+  ["AN INVASION OF PRIVACY", "une atteinte à la vie privée"],
+  ["THE RIGHT TO PRIVACY", "le droit à la vie privée"],
+  ["TO BUG / TO TAP A PHONE", "mettre un téléphone sur écoute"],
+  ["WIRETAPPING", "les écoutes téléphoniques"],
+  ["A TRACKING DEVICE", "un dispositif de pistage"],
+  ["TO WATCH TELEVISION / TV", "regarder la télévision"],
+  ["A TV PROGRAMME (UK) / PROGRAM (US)", "une émission"],
+  ["TO BROADCAST / TO AIR", "diffuser"],
+  ["THE NEWS", "les actualités"],
+  ["A NEWSREADER", "un présentateur (du journal télévisé)"],
+  ["AN ANCHORMAN (US) / TO ANCHOR", "un présentateur / présenter"],
+  ["A DOCUMENTARY FILM", "un documentaire"],
+  ["A SERIAL", "un feuilleton"],
+  ["A SERIES", "une série"],
+  ["AN AWARD", "un prix, une récompense (artistique)"],
+  ["TV RATINGS / AUDIENCE RATINGS", "indice d'écoute"],
+  ["A TV COMMERCIAL", "un message publicitaire"],
+  ["TO SKIP COMMERCIALS", "zapper la publicité"],
+  ["A LANDLINE", "une ligne fixe / terrestre"],
+  ["A TOUCHSCREEN", "un écran tactile"],
+  ["THE HANDSET", "le combiné"],
+  ["TEXTING / TEXT-MESSAGING", "l'envoi de textos/SMS"],
+  ["THE DIGITAL DIVIDE", "la fracture numérique"],
+  ["COMPUTER SCIENCE", "l'informatique"],
+  ["A COMPUTER SCIENTIST", "un informaticien"],
+  ["TO COMPUTERIZE", "informatiser"],
+  ["TO BE COMPUTER-LITERATE", "savoir se servir d'un ordinateur"],
+  ["DATA PROCESSING", "traitement de données"],
+  ["A CHIP", "une puce"],
+  ["HARDWARE", "le matériel informatique"],
+  ["SOFTWARE", "les logiciels"],
+  ["A DESKTOP (COMPUTER)", "un ordinateur de bureau"],
+  ["A LAPTOP (COMPUTER)", "un ordinateur portable"],
+  ["A MICROCHIP", "une puce informatique"],
+  ["A HARD DRIVE", "un disque dur"],
+  ["A PROGRAM", "un logiciel, une application"],
+  ["A SEARCH ENGINE", "un moteur de recherche"],
+  ["A BROADBAND CONNECTION", "une connexion à haut débit"],
+  ["RECREATIONAL", "récréatif"],
+  ["EDUCATIONAL", "éducatif"],
+  ["A NETSURFER", "un internaute"],
+  ["A HACKER, A PIRATE", "un pirate"],
+  ["HACKING, PIRACY", "le piratage"],
+  ["TO LOG ONTO THE INTERNET", "se connecter à Internet"],
+  ["TO GO ONLINE", "aller sur internet"],
+  ["TO SURF ON THE WEB", "naviguer sur la Toile"],
+  ["TO UPDATE", "mettre à jour"],
+  ["TO HACK INTO A COMPUTER", "pirater un système"],
+  ["TO BE STRUCK BY A VIRUS", "être victime d'un virus"],
+  ["CYBERBULLYING", "la cyber-intimidation"],
+  ["ONLINE HARASSMENT", "le harcèlement en ligne"],
+  ["SPYWARE", "un logiciel espion"],
+  ["RANSOMWARE", "un rançongiciel"],
+  ["THE GLOBAL VILLAGE", "le village planétaire"],
+  ["AN ISP (INTERNET SERVICE PROVIDER)", "un fournisseur d'accès"],
+  ["A NEWSGROUP", "un forum de discussion"],
+  ["A VIDEO HOST WEBSITE", "un site d'échange de vidéo"],
+  ["A SOCIAL NETWORK", "un réseau social"],
+  ["A SOCIAL NETWORKING SITE", "un site (de réseau) communautaire"],
+  ["A FILE-SHARING WEBSITE", "un site de partage de fichiers"],
+  ["E-COMMERCE", "le commerce électronique"],
+  ["ON-LINE BANKING", "la banque en direct"],
+  ["E-MAIL", "le courrier électronique, courriel"],
+  ["JUNK MAIL", "le courrier indésirable, pourriel"],
+  ["A CHAT LINE", "un forum de discussion"],
+  ["TO DOWNLOAD", "télécharger"],
+  ["TO UPLOAD / TO POST", "mettre en ligne"],
+  ["A PATENT", "un brevet"],
+  ["COPYRIGHT", "les droits d'auteur / les droits de reproduction"],
+  ["INTELLECTUAL PROPERTY", "la propriété intellectuelle"],
+  ["A BREACH OF TRUST", "un abus de confiance"],
+  ["LITIGATION", "un procès"],
+  ["A SUBSCRIPTION", "un abonnement / une cotisation"],
+  ["TO DIGITIZE", "numériser"],
+  ["A DIGITAL BOOK", "un livre numérique"],
+  ["TO CHARGE", "facturer … pour qq'un"],
+  ["FEES", "les prix / droits / frais"],
+  ["TO GENERATE REVENUE", "générer des revenus"],
+];
+
+let mode = 'flashcard';
+let currentIndex = 0;
+let shuffled = [];
+let score = 0;
+let answered = 0;
+let revealed = false;
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['flashcard','qcm','fr-to-en'][i] === m);
+  });
+  restart();
+}
+
+function restart() {
+  shuffled = shuffle(vocab);
+  currentIndex = 0; score = 0; answered = 0; revealed = false;
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('cardContainer').style.display = '';
+  document.getElementById('answerSection').style.display = '';
+  showCard();
+}
+
+function showCard() {
+  if (currentIndex >= shuffled.length) { showResults(); return; }
+  revealed = false;
+  const pair = shuffled[currentIndex];
+  const isEn = mode !== 'fr-to-en';
+  const question = isEn ? pair[0] : pair[1];
+  const answer = isEn ? pair[1] : pair[0];
+
+  document.getElementById('cardLabel').textContent = isEn ? 'ANGLAIS' : 'FRANÇAIS';
+  document.getElementById('cardWord').textContent = question;
+  document.getElementById('cardHint').textContent = mode === 'qcm' ? 'Choisis la bonne traduction' : '👆 Clique pour voir la réponse';
+  updateProgress();
+
+  const section = document.getElementById('answerSection');
+
+  if (mode === 'flashcard' || mode === 'fr-to-en') {
+    section.innerHTML = `
+      <div class="answer-reveal" id="answerReveal">
+        <div class="card-label">${isEn ? 'FRANÇAIS' : 'ANGLAIS'}</div>
+        <div class="answer-text">${answer}</div>
+      </div>
+      <button class="reveal-btn" id="revealBtn" onclick="revealAnswer()">Voir la réponse</button>
+      <div class="feedback-btns" id="feedbackBtns">
+        <button class="btn-knew" onclick="nextCard(true)">✓ Je savais</button>
+        <button class="btn-didnt" onclick="nextCard(false)">✗ Je savais pas</button>
+      </div>
+    `;
+    document.getElementById('mainCard').onclick = revealAnswer;
+  } else {
+    const wrongOptions = shuffle(vocab.filter(p => p !== pair)).slice(0, 3).map(p => isEn ? p[1] : p[0]);
+    const options = shuffle([answer, ...wrongOptions]);
+    document.getElementById('mainCard').onclick = null;
+    section.innerHTML = `
+      <div class="qcm-options" id="qcmOptions">
+        ${options.map(opt => `<button class="qcm-btn" data-val="${opt.replace(/"/g,'&quot;')}" onclick="checkQCM(this)">${opt}</button>`).join('')}
+      </div>
+      <button class="next-btn" id="nextBtn" onclick="nextCard(null)">Suivant →</button>
+    `;
+    document.querySelectorAll('.qcm-btn').forEach(btn => {
+      btn.dataset.correct = answer;
+    });
+  }
+}
+
+function revealAnswer() {
+  if (revealed) return;
+  revealed = true;
+  document.getElementById('answerReveal').classList.add('visible');
+  document.getElementById('revealBtn').style.display = 'none';
+  document.getElementById('feedbackBtns').classList.add('visible');
+  document.getElementById('mainCard').onclick = null;
+}
+
+function checkQCM(btn) {
+  const chosen = btn.dataset.val;
+  const correct = btn.dataset.correct;
+  document.querySelectorAll('.qcm-btn').forEach(b => b.disabled = true);
+  if (chosen === correct) { btn.classList.add('correct'); score++; }
+  else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.qcm-btn').forEach(b => { if (b.dataset.val === correct) b.classList.add('correct'); });
+  }
+  answered++;
+  updateScoreDisplay();
+  document.getElementById('nextBtn').classList.add('visible');
+}
+
+function nextCard(knew) {
+  if (knew === true) score++;
+  if (knew !== null) answered++;
+  updateScoreDisplay();
+  currentIndex++;
+  showCard();
+}
+
+function updateProgress() {
+  const pct = (currentIndex / shuffled.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('counter').textContent = `${currentIndex + 1} / ${shuffled.length}`;
+}
+
+function updateScoreDisplay() {
+  document.getElementById('scoreDisplay').innerHTML = `Score : <span>${score} / ${answered}</span>`;
+}
+
+function showResults() {
+  document.getElementById('cardContainer').style.display = 'none';
+  document.getElementById('answerSection').style.display = 'none';
+  const pct = Math.round((score / shuffled.length) * 100);
+  document.getElementById('resultsScore').textContent = pct + '%';
+  let msg = pct >= 80 ? '🔥 Excellent ! Tu maîtrises bien ce chapitre.' :
+            pct >= 60 ? '👍 Bien ! Continue à réviser les mots que tu ne savais pas.' :
+            pct >= 40 ? '📚 Pas mal, mais il faut retravailler. Recommence !' :
+            '💪 Continue, ça va venir. Recommence plusieurs fois !';
+  document.getElementById('resultsMsg').textContent = `${score} bons sur ${shuffled.length}. ${msg}`;
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('progressFill').style.width = '100%';
+}
+
+restart();
+</script>
+</body>
+</html>
