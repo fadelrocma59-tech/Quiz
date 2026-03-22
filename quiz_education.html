@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocab Quiz — Chapitre 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --card: #13131a;
+    --border: #2a2a3a;
+    --accent: #f59e0b;
+    --accent2: #10b981;
+    --green: #00e5a0;
+    --text: #f0f0ff;
+    --muted: #6b6b8a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle { color: var(--muted); font-size: 0.8rem; margin-bottom: 2rem; text-align: center; }
+  .mode-selector {
+    display: flex; gap: 0.5rem; margin-bottom: 2rem;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 0.4rem;
+  }
+  .mode-btn {
+    padding: 0.5rem 1.2rem; border-radius: 8px; border: none;
+    cursor: pointer; font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    background: transparent; color: var(--muted); transition: all 0.2s;
+  }
+  .mode-btn.active { background: var(--accent); color: white; }
+  .progress-bar {
+    width: 100%; max-width: 500px; height: 4px;
+    background: var(--border); border-radius: 2px; margin-bottom: 1.5rem; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px; transition: width 0.4s ease;
+  }
+  .score-display { font-size: 0.75rem; color: var(--muted); margin-bottom: 1rem; text-align: center; }
+  .score-display span { color: var(--green); font-weight: 500; }
+  .counter { font-size: 0.75rem; color: var(--muted); text-align: center; margin-bottom: 0.5rem; }
+  .card-container { width: 100%; max-width: 500px; margin-bottom: 1.5rem; }
+  .card {
+    width: 100%; min-height: 180px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 2rem;
+    cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+    animation: pop 0.3s ease;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245,158,11,0.15); }
+  .card-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+  .card-word { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; text-align: center; line-height: 1.3; }
+  .card-hint { font-size: 0.7rem; color: var(--muted); margin-top: 1rem; text-align: center; }
+  .answer-section { width: 100%; max-width: 500px; }
+  .reveal-btn {
+    width: 100%; padding: 1rem; background: var(--accent); border: none;
+    border-radius: 12px; color: white; font-family: 'DM Mono', monospace;
+    font-size: 0.85rem; cursor: pointer; margin-bottom: 1rem; transition: all 0.2s;
+  }
+  .reveal-btn:hover { opacity: 0.85; }
+  .answer-reveal {
+    background: var(--card); border: 1px solid var(--green);
+    border-radius: 12px; padding: 1.2rem; text-align: center;
+    margin-bottom: 1rem; display: none;
+  }
+  .answer-reveal.visible { display: block; }
+  .answer-text { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--green); line-height: 1.4; }
+  .feedback-btns { display: none; gap: 0.75rem; }
+  .feedback-btns.visible { display: flex; }
+  .btn-knew {
+    flex: 1; padding: 0.85rem;
+    background: rgba(0,229,160,0.1); border: 1px solid var(--green);
+    border-radius: 12px; color: var(--green); font-family: 'DM Mono', monospace;
+    font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-knew:hover { background: rgba(0,229,160,0.2); }
+  .btn-didnt {
+    flex: 1; padding: 0.85rem;
+    background: rgba(255,101,132,0.1); border: 1px solid #ff6584;
+    border-radius: 12px; color: #ff6584; font-family: 'DM Mono', monospace;
+    font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-didnt:hover { background: rgba(255,101,132,0.2); }
+  .qcm-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .qcm-btn {
+    padding: 0.9rem; background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text); font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; cursor: pointer; transition: all 0.2s; text-align: center; line-height: 1.4;
+  }
+  .qcm-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .qcm-btn.correct { background: rgba(0,229,160,0.1); border-color: var(--green); color: var(--green); }
+  .qcm-btn.wrong { background: rgba(255,101,132,0.1); border-color: #ff6584; color: #ff6584; }
+  .next-btn {
+    width: 100%; padding: 1rem; background: transparent;
+    border: 1px solid var(--border); border-radius: 12px; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 0.85rem; cursor: pointer;
+    margin-top: 1rem; transition: all 0.2s; display: none;
+  }
+  .next-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .next-btn.visible { display: block; }
+  .results { width: 100%; max-width: 500px; text-align: center; display: none; }
+  .results.visible { display: block; }
+  .results-score {
+    font-family: 'Syne', sans-serif; font-size: 4rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--green));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 1rem 0;
+  }
+  .results-msg { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; line-height: 1.6; }
+  .restart-btn {
+    padding: 1rem 2rem; background: var(--accent); border: none;
+    border-radius: 12px; color: white; font-family: 'DM Mono', monospace;
+    font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+  }
+  .restart-btn:hover { opacity: 0.85; }
+  @keyframes pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<h1>VOCAB QUIZ</h1>
+<p class="subtitle">Chapitre 3 — Education Matters</p>
+
+<div class="mode-selector">
+  <button class="mode-btn active" onclick="setMode('flashcard')">Flashcard</button>
+  <button class="mode-btn" onclick="setMode('qcm')">QCM</button>
+  <button class="mode-btn" onclick="setMode('fr-to-en')">FR → EN</button>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="score-display" id="scoreDisplay"></div>
+<div class="counter" id="counter"></div>
+
+<div class="card-container" id="cardContainer">
+  <div class="card" id="mainCard">
+    <div class="card-label" id="cardLabel">ANGLAIS</div>
+    <div class="card-word" id="cardWord"></div>
+    <div class="card-hint" id="cardHint"></div>
+  </div>
+</div>
+
+<div class="answer-section" id="answerSection"></div>
+
+<div class="results" id="results">
+  <div class="card-label">RÉSULTAT FINAL</div>
+  <div class="results-score" id="resultsScore"></div>
+  <div class="results-msg" id="resultsMsg"></div>
+  <button class="restart-btn" onclick="restart()">🔄 Recommencer</button>
+</div>
+
+<script>
+const vocab = [
+  ["THE FAMILY CELL", "la cellule familiale"],
+  ["PARENTS", "les parents"],
+  ["THE HEAD OF THE FAMILY", "le chef de famille"],
+  ["A ONE-PARENT FAMILY", "une famille monoparentale"],
+  ["A SINGLE MOTHER", "une mère célibataire"],
+  ["A FAMILY MAN", "un bon père de famille"],
+  ["A HUSBAND", "un époux"],
+  ["A WIFE", "une épouse"],
+  ["A FATHER / A MOTHER", "un père / une mère"],
+  ["A SON / A DAUGHTER", "un fils / une fille"],
+  ["THE OFFSPRING", "la progéniture"],
+  ["A BROTHER / A SISTER", "un frère / une sœur"],
+  ["A CHILD", "un enfant"],
+  ["AN ONLY CHILD", "un enfant unique"],
+  ["THE PARENTS-IN-LAW", "les beaux parents (parents de l'époux)"],
+  ["A STEP-MOTHER", "une belle-mère (épouse du père)"],
+  ["A BLENDED FAMILY", "une famille recomposée"],
+  ["FOSTER PARENTS", "les parents adoptifs"],
+  ["KINSHIP", "la parenté"],
+  ["TO BE RELATED", "avoir un lien de parenté"],
+  ["A RELATIVE", "un parent"],
+  ["AN AUNT / AN UNCLE", "une tante / un oncle"],
+  ["A COUSIN", "un(e) cousin(e)"],
+  ["TO SUE FOR DIVORCE", "entamer une procédure de divorce"],
+  ["TO DIVORCE S.O.", "divorcer de qn"],
+  ["TO GRANT LEGAL CUSTODY", "accorder la garde légale"],
+  ["TO PAY CHILD SUPPORT", "verser une pension pour les enfants"],
+  ["ALIMONY", "une pension alimentaire"],
+  ["THE GROWN-UPS", "les adultes"],
+  ["THE ELDER GENERATION", "la génération précédente"],
+  ["TO WIDEN THE GAP", "élargir le fossé"],
+  ["TO BRIDGE THE GAP", "combler le fossé"],
+  ["TO GET ON WELL WITH SB", "s'entendre bien avec"],
+  ["TO CLASH WITH SB", "se heurter à"],
+  ["OLD AGE", "la vieillesse"],
+  ["OLD PEOPLE / THE ELDERLY", "les personnes âgées"],
+  ["SENIOR CITIZENS / THE SENIORS", "les personnes du 3e âge"],
+  ["THE SILVER GENERATION", "la génération vermeille"],
+  ["SILVER LEISURE SERVICES", "les loisirs pour le troisième âge"],
+  ["TO GROW OLD / TO AGE", "vieillir"],
+  ["TO RETIRE", "prendre sa retraite"],
+  ["LIFE EXPECTANCY", "l'espérance de vie"],
+  ["A NURSING HOME", "une maison de retraite"],
+  ["PARENTAL AUTHORITY", "l'autorité parentale"],
+  ["HARSH, SEVERE", "dur, sévère"],
+  ["LENIENT / LENIENCY", "indulgent / indulgence"],
+  ["OVERINDULGENT", "trop indulgent"],
+  ["A ROLE MODEL", "un modèle, un exemple"],
+  ["THE GENERATION GAP", "le conflit des générations"],
+  ["THE YOUNG / YOUNG PEOPLE", "les jeunes"],
+  ["A YOUNGSTER", "un jeune"],
+  ["A TEENAGER", "un adolescent"],
+  ["A TEEN MOTHER", "une mère adolescente"],
+  ["EDUCATION, UPBRINGING", "l'éducation"],
+  ["TO BRING UP, TO RAISE CHILDREN", "élever (les enfants)"],
+  ["TO PROVIDE FOR S.O.", "subvenir aux besoins de qq"],
+  ["TO LOOK AFTER, TO TAKE CARE OF S.O.", "veiller sur qq"],
+  ["TO SPOIL S.O.", "gâter qq"],
+  ["TO GROW UP", "grandir"],
+  ["TO BE UNDER AGE", "être mineur"],
+  ["TO COME OF AGE", "atteindre la majorité"],
+  ["MANDATORY / COMPULSORY SCHOOLING", "la scolarité obligatoire"],
+  ["THE SCHOOL YEAR", "l'année scolaire"],
+  ["A TERM", "trimestre"],
+  ["A SCHOOLDAY", "un jour d'école"],
+  ["A BREAK", "une pause, récréation"],
+  ["A PUPIL / A STUDENT", "un élève"],
+  ["A SCHOOLMATE", "un camarade"],
+  ["A SCHOOLMASTER (MISTRESS)", "un instituteur (institutrice)"],
+  ["A TEACHER", "un professeur (de collège, lycée), un enseignant"],
+  ["A PROFESSOR", "un professeur (d'université)"],
+  ["AN ALUMNI", "un(e) ancien(ne) élève/étudiant(e)"],
+  ["A DAYCARE CENTRE", "une crèche"],
+  ["A NURSERY SCHOOL", "école maternelle"],
+  ["A BOARDING SCHOOL", "un pensionnat"],
+  ["A JUNIOR HIGH SCHOOL (USA)", "un collège"],
+  ["A SENIOR HIGH SCHOOL (USA)", "un lycée"],
+  ["A STATE-RUN SCHOOL (UK)", "une école publique (gratuite)"],
+  ["A PUBLIC / INDEPENDENT / PRIVATE SCHOOL (UK)", "une école privée"],
+  ["A PREP SCHOOL (UK)", "une école préparatoire aux écoles secondaires privées"],
+  ["THE (TUITION) FEES", "les frais de scolarité"],
+  ["FEE-PAYING", "payant"],
+  ["THE TIMETABLE", "l'emploi du temps"],
+  ["A CURRICULUM", "un programme (d'études)"],
+  ["A SYLLABUS", "un programme (d'une matière)"],
+  ["THE THREE Rs (ARITHMETIC, READING, WRITING)", "les 3 compétences de base"],
+  ["A SUBJECT", "une matière"],
+  ["AN EXTRA-CURRICULAR ACTIVITY", "une activité extra scolaire"],
+  ["VOCATIONAL TRAINING", "la formation professionnelle"],
+  ["A TRAINING SCHEME", "un stage de formation"],
+  ["AN INTERNSHIP", "un stage en entreprise"],
+  ["HOME TUTORING", "les cours particuliers"],
+  ["ACADEMIC ACHIEVEMENT", "la réussite scolaire"],
+  ["A HIGH ACHIEVER / A LOW ACHIEVER", "un élève doué / un élève en situation d'échec scolaire"],
+  ["A WHIZ KID", "un surdoué"],
+  ["TO LEARN", "apprendre"],
+  ["TO TEACH S.O. STH", "enseigner qch à qq"],
+  ["TO ATTEND SCHOOL", "suivre les cours"],
+  ["TO SKIP LESSONS / TO PLAY TRUANT", "sécher les cours / faire l'école buissonnière"],
+  ["TRUANCY / ABSENTEEISM", "l'absentéisme"],
+  ["TO EXPEL (FROM SCHOOL)", "renvoyer / exclure définitivement"],
+  ["A MOCK EXAM", "un examen / concours blanc"],
+  ["TO SIT FOR AN EXAM", "passer un examen"],
+  ["TO PASS AN EXAM", "réussir à un examen"],
+  ["A COMPETITIVE EXAMINATION (FOR ADMISSION)", "concours d'entrée à une grande école"],
+  ["TO GRADUATE / A GRADUATE", "obtenir un diplôme / un diplômé"],
+  ["AN UNDERGRADUATE", "un étudiant préparant la licence"],
+  ["A BACHELOR'S DEGREE", "une licence"],
+  ["TO FAIL AN EXAM / TO FLUNK AN EXAM", "rater un examen / être collé à un examen"],
+  ["TO REPEAT (A YEAR)", "redoubler"],
+  ["TO DROP OUT OF SCHOOL", "arrêter les études"],
+  ["TO REGISTER / TO ENROL", "s'inscrire"],
+  ["A GRANT", "bourse d'étude (selon revenus)"],
+  ["A VALEDICTORIAN (US)", "un major de promotion"],
+  ["A SCHOLARSHIP", "une bourse d'étude (selon résultats)"],
+  ["A FELLOWSHIP", "une bourse de recherche"],
+  ["A FRESHMAN (US)", "un étudiant en 1ère année"],
+  ["A SOPHOMORE (US)", "un étudiant en 2ème année"],
+  ["A JUNIOR (US)", "un étudiant en 3ème année"],
+  ["A SENIOR (US)", "un étudiant en 4ème année"],
+  ["TO HAVE A COLLEGE EDUCATION", "avoir fait des études supérieures"],
+  ["TO MAJOR IN (BUSINESS)", "faire des études de (commerce)"],
+  ["TO READ (A SUBJECT)", "étudier (une matière)"],
+  ["AN ACADEMIC", "un universitaire"],
+  ["THE FACULTY", "le corps enseignant"],
+  ["A LECTURE", "un cours magistral"],
+];
+
+let mode = 'flashcard';
+let currentIndex = 0;
+let shuffled = [];
+let score = 0;
+let answered = 0;
+let revealed = false;
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['flashcard','qcm','fr-to-en'][i] === m);
+  });
+  restart();
+}
+
+function restart() {
+  shuffled = shuffle(vocab);
+  currentIndex = 0; score = 0; answered = 0; revealed = false;
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('cardContainer').style.display = '';
+  document.getElementById('answerSection').style.display = '';
+  showCard();
+}
+
+function showCard() {
+  if (currentIndex >= shuffled.length) { showResults(); return; }
+  revealed = false;
+  const pair = shuffled[currentIndex];
+  const isEn = mode !== 'fr-to-en';
+  const question = isEn ? pair[0] : pair[1];
+  const answer = isEn ? pair[1] : pair[0];
+
+  document.getElementById('cardLabel').textContent = isEn ? 'ANGLAIS' : 'FRANÇAIS';
+  document.getElementById('cardWord').textContent = question;
+  document.getElementById('cardHint').textContent = mode === 'qcm' ? 'Choisis la bonne traduction' : '👆 Clique pour voir la réponse';
+  updateProgress();
+
+  const section = document.getElementById('answerSection');
+
+  if (mode === 'flashcard' || mode === 'fr-to-en') {
+    section.innerHTML = `
+      <div class="answer-reveal" id="answerReveal">
+        <div class="card-label">${isEn ? 'FRANÇAIS' : 'ANGLAIS'}</div>
+        <div class="answer-text">${answer}</div>
+      </div>
+      <button class="reveal-btn" id="revealBtn" onclick="revealAnswer()">Voir la réponse</button>
+      <div class="feedback-btns" id="feedbackBtns">
+        <button class="btn-knew" onclick="nextCard(true)">✓ Je savais</button>
+        <button class="btn-didnt" onclick="nextCard(false)">✗ Je savais pas</button>
+      </div>
+    `;
+    document.getElementById('mainCard').onclick = revealAnswer;
+  } else {
+    const wrongOptions = shuffle(vocab.filter(p => p !== pair)).slice(0, 3).map(p => isEn ? p[1] : p[0]);
+    const options = shuffle([answer, ...wrongOptions]);
+    document.getElementById('mainCard').onclick = null;
+    section.innerHTML = `
+      <div class="qcm-options" id="qcmOptions">
+        ${options.map(opt => `<button class="qcm-btn" data-val="${opt.replace(/"/g,'&quot;')}" data-correct="${answer.replace(/"/g,'&quot;')}" onclick="checkQCM(this)">${opt}</button>`).join('')}
+      </div>
+      <button class="next-btn" id="nextBtn" onclick="nextCard(null)">Suivant →</button>
+    `;
+  }
+}
+
+function revealAnswer() {
+  if (revealed) return;
+  revealed = true;
+  document.getElementById('answerReveal').classList.add('visible');
+  document.getElementById('revealBtn').style.display = 'none';
+  document.getElementById('feedbackBtns').classList.add('visible');
+  document.getElementById('mainCard').onclick = null;
+}
+
+function checkQCM(btn) {
+  const chosen = btn.dataset.val;
+  const correct = btn.dataset.correct;
+  document.querySelectorAll('.qcm-btn').forEach(b => b.disabled = true);
+  if (chosen === correct) { btn.classList.add('correct'); score++; }
+  else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.qcm-btn').forEach(b => { if (b.dataset.val === correct) b.classList.add('correct'); });
+  }
+  answered++;
+  updateScoreDisplay();
+  document.getElementById('nextBtn').classList.add('visible');
+}
+
+function nextCard(knew) {
+  if (knew === true) score++;
+  if (knew !== null) answered++;
+  updateScoreDisplay();
+  currentIndex++;
+  showCard();
+}
+
+function updateProgress() {
+  const pct = (currentIndex / shuffled.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('counter').textContent = `${currentIndex + 1} / ${shuffled.length}`;
+}
+
+function updateScoreDisplay() {
+  document.getElementById('scoreDisplay').innerHTML = `Score : <span>${score} / ${answered}</span>`;
+}
+
+function showResults() {
+  document.getElementById('cardContainer').style.display = 'none';
+  document.getElementById('answerSection').style.display = 'none';
+  const pct = Math.round((score / shuffled.length) * 100);
+  document.getElementById('resultsScore').textContent = pct + '%';
+  let msg = pct >= 80 ? '🔥 Excellent ! Tu maîtrises bien ce chapitre.' :
+            pct >= 60 ? '👍 Bien ! Continue à réviser les mots que tu ne savais pas.' :
+            pct >= 40 ? '📚 Pas mal, mais il faut retravailler. Recommence !' :
+            '💪 Continue, ça va venir. Recommence plusieurs fois !';
+  document.getElementById('resultsMsg').textContent = `${score} bons sur ${shuffled.length}. ${msg}`;
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('progressFill').style.width = '100%';
+}
+
+restart();
+</script>
+</body>
+</html>
